@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../testingsession.dart';
 import 'login.dart'; // Import your login screen
-import 'home.dart';  // Import your home screen
+//import 'home.dart';  // Import your home screen
 /* working but fresh install gives homescreen
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

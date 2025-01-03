@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -1003,7 +1004,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _widgetOptions = [
           PostsScreen(name: widget.name),
           FriendsScreen(name: widget.name, lat: position.latitude.toString(), lng: position.longitude.toString()),
-          ReadContacts(),
+          ReadContacts(name: widget.name),
           MapScreen(name: widget.name, lat: position.latitude.toString(), lng: position.longitude.toString()),
           ProfileScreen(friendName: widget.name),
         ];
@@ -1198,14 +1199,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
                 icon: Icon(Icons.contact_phone),
               ),*/
-              PopupMenuButton(
+             /* PopupMenuButton(
                 padding: EdgeInsets.all(0),
                 onSelected: (value) async {
                   if (value == 5) {
                     final authProvider = Provider.of<AuthProvider>(
                         context, listen: false);
                     await authProvider.logout();
-                    Navigator.of(context).pushReplacementNamed(login.page_id);
+                   // Navigator.of(context).pushReplacementNamed(login.page_id);
+
+
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => login()),
+                          (Route<dynamic> route) => false,
+                    );
+
+
                   }
                 },
                 itemBuilder: (context) =>
@@ -1223,7 +1232,43 @@ class _HomeScreenState extends State<HomeScreen> {
                     value: 5,
                   ),
                 ],
-              ),
+              ),commented as name storing in session */
+              PopupMenuButton(
+                padding: EdgeInsets.all(0),
+                onSelected: (value) async {
+                  if (value == 5) {
+                    // Clear session data
+                    const secureStorage = FlutterSecureStorage();
+                    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+                    // Remove stored JWT token and username
+                    await secureStorage.delete(key: 'jwt_token');
+                    await prefs.remove('loggedInPerson');
+
+                    // Debug logs for confirmation
+                    print('Session data cleared. Logging out.');
+
+                    // Navigate back to login screen, removing all previous routes
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => login()),
+                          (Route<dynamic> route) => false,
+                    );
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    child: Row(
+                      children: [
+                        Icon(Icons.logout_rounded),
+                        SizedBox(width: 10),
+                        Text('Logout', style: TextStyle(color: Colors.black, fontSize: 17)),
+                      ],
+                    ),
+                    value: 5,
+                  ),
+                ],
+              )
+
             ],
           ),
         ],
@@ -1279,7 +1324,7 @@ class _HomeScreenState extends State<HomeScreen> {
     await prefs.clear(); // Clear session data
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => LoginScreen()),
+      MaterialPageRoute(builder: (context) => login()),
     );
   }
 /*
@@ -1518,12 +1563,26 @@ working code commented */
 */
 
   Future<void> _postNewContent(String content) async {
+    final _secureStorage = const FlutterSecureStorage();
+    // Initialize secure storage and shared preferences
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Check for stored token and username
+
+    String? token = await _secureStorage.read(key: 'jwt_token');
+
+    if (token == null) {
+      // Handle missing token (e.g., show a dialog or redirect to login)
+      _showErrorDialog( 'Authentication error. Please log in again.');
+      return;
+    }
     final request = http.MultipartRequest(
       'POST',
-      Uri.parse(
-          'https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/createpost'),
+     // Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/createpost'),
+      Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/createpostprotected'),
     );
-
+    request.headers['Authorization'] = 'Bearer $token';
     request.fields['content'] = content; // Content of the post
     request.fields['name'] = widget.name; // Logged-in username
 

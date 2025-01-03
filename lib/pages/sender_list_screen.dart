@@ -43,7 +43,7 @@ class _SenderListScreenState extends State<SenderListScreen> {
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'person2': 'varun'}),  // Use loggedinPerson here
+      body: jsonEncode({'person2':loggedinPerson}),  // Use loggedinPerson here
     );
 
     if (response.statusCode == 200) {
@@ -84,7 +84,7 @@ class _SenderListScreenState extends State<SenderListScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>ChatScreen(sender: sender),
+        builder: (context) =>ChatScreen(sender: sender, loggedinPerson: '', otherPerson: '',),
       ),
     );
   }

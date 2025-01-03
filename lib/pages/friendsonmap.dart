@@ -109,9 +109,11 @@ class _MapScreenState extends State<MapScreen> {
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:konktapp/pages/viewprofile.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() => runApp(MyApp());
 
@@ -150,10 +152,44 @@ class _MapScreenState extends State<MapScreen> {
     _fetchFriendsData();
   }
 
+  void _showErrorDialog( String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _fetchFriendsData() async {
- // const apiUrl = 'https://testkonkt.azurewebsites.net/friendsoffriendsradius20';
+    final _secureStorage = const FlutterSecureStorage();
+    // Initialize secure storage and shared preferences
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Check for stored token and username
+
+    String? token = await _secureStorage.read(key: 'jwt_token');
+
+    if (token == null) {
+      // Handle missing token (e.g., show a dialog or redirect to login)
+      _showErrorDialog( 'Authentication error. Please log in again.');
+      return;
+    }
+
+
+    // const apiUrl = 'https://testkonkt.azurewebsites.net/friendsoffriendsradius20';
 //nodejs url not showung map and static values working fine
-   const apiUrl = 'https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/friendsoffriendsradius20';
+  // const apiUrl = 'https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/friendsoffriendsradius20';
+   const apiUrl = 'https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/friendsoffriendsradius20protected';
+
     final response = await http.post(
       Uri.parse(apiUrl),
       body: json.encode({
@@ -166,7 +202,11 @@ class _MapScreenState extends State<MapScreen> {
       "lng": widget.lng
 
       }),
-      headers: {"Content-Type": "application/json"},
+      //headers: {"Content-Type": "application/json"},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
     );
 
     if (response.statusCode == 200) {

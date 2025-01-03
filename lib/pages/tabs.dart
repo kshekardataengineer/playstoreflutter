@@ -7,18 +7,18 @@
   Copyright and Good Faith Purchasers © 2022-present flutter_ninja.
 */
 import 'package:flutter/material.dart';
-import 'package:konktapp/pages/activity.dart';
-import 'package:konktapp/pages/home.dart';
+//import 'package:konktapp/pages/activity.dart';
+//import 'package:konktapp/pages/home.dart';
 import 'package:konktapp/pages/postpage.dart';
-import 'package:konktapp/pages/profile.dart';
-import 'package:konktapp/pages/reels.dart';
-import 'package:konktapp/pages/search.dart';
+//import 'package:konktapp/pages/profile.dart';
+//import 'package:konktapp/pages/reels.dart';
+//import 'package:konktapp/pages/search.dart';
 
 import '../pages/friendscreenlist.dart';
 import 'package:konktapp/pages/friendscreenlist.dart';
 import '../pages/friendsonmap.dart';
-import 'package:konktapp/pages/job_screen.dart';
-import 'package:konktapp/pages/ServiceScreen.dart';
+//import 'package:konktapp/pages/job_screen.dart';
+//import 'package:konktapp/pages/ServiceScreen.dart';
 
 class tabs extends StatefulWidget {
   tabs({Key? key}) : super(key: key);
@@ -36,11 +36,11 @@ class _TabsState extends State<tabs> {
   final List<Widget> _pages = [
     PostScreen(loggedInPerson: "rajkiran"??""),
     FriendsScreen(name: 'rajkian', lat: '17.3730', lng: '78.5476'),
-    reels(),
+    //reels(),
     //MapScreen(),
 
     MapScreen( name:'rajkiran',lat: '17.3730',lng:'78.5476'),
-    profile(),
+   // profile(),
 
 
   ];

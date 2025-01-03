@@ -5,6 +5,7 @@ import 'package:konktapp/providers/UserProvider.dart';
 
 import 'package:konktapp/providers/post_provider.dart';
 import 'package:konktapp/providers/posts_provider.dart';
+import 'package:konktapp/testingsession.dart';
 import 'package:provider/provider.dart'; // Import provider package
 import 'package:shared_preferences/shared_preferences.dart'; // Import shared_preferences
 import 'helper/style.dart';
@@ -14,7 +15,7 @@ import 'providers/auth_provider.dart'; // Import AuthProvider
 import 'pages/friendscreenlist.dart'; // Import your screen
 import 'pages/login.dart';
 import 'pages/tabs.dart';
-import 'pages/home.dart';
+//import 'pages/home.dart';
 //import 'pages/job_screen.dart';
 /*
 void main() async {
@@ -82,7 +83,7 @@ class MyApp extends StatelessWidget {
   }
 }*/
 
-
+/*
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -169,5 +170,84 @@ Future<void> clearAllData() async {
   await prefs.clear();
   print('All SharedPreferences data cleared');
 }
+*/
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+/*
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize the secure storage
+  const secureStorage = FlutterSecureStorage();
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+
+  // Check for stored token and username
+  String? token = await secureStorage.read(key: 'jwt_token');
+  String? name = prefs.getString('loggedInPerson');
+
+  runApp(MyApp(token: token, name: name, initialRoute: '',));
+}
+
+class MyApp extends StatelessWidget {
+  final String? token;
+  final String? name;
+
+  MyApp({required this.token, required this.name, required String initialRoute});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'OTP Login App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: token != null && name != null
+          ? HomeScreen(name: name!) // Directly navigate to HomeScreen
+          : login(), // Navigate to Login if no session exists
+    );
+  }
+}
+
+working but next time opening login screen */
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize secure storage and shared preferences
+  const secureStorage = FlutterSecureStorage();
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+
+  // Check for stored token and username
+  String? token = await secureStorage.read(key: 'jwt_token');
+  String? name = prefs.getString('loggedInPerson');
+
+  // Debugging output (remove in production)
+  print('Token: $token, Name: $name');
+
+  runApp(MyApp(
+    token: token,
+    name: name, initialRoute: '',
+  ));
+}
+
+class MyApp extends StatelessWidget {
+  final String? token;
+  final String? name;
+
+  MyApp({required this.token, required this.name, required String initialRoute});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'OTP Login App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: token != null && name != null
+          ? HomeScreen(name: name!) // Navigate to HomeScreen if session exists
+          : login(), // Navigate to Login if no session exists
+    );
+  }
+}
 

@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'login.dart';
 
@@ -55,11 +56,22 @@ class AuthProvider with ChangeNotifier {
 }
 
 
-Future<void> onLoginSuccess(BuildContext context, String token) async {
+/*Future<void> onLoginSuccess(BuildContext context, String token) async {
   // Save token securely
   await TokenStorage.saveToken(token);
 
   // Update provider
+  Provider.of<AuthProvider>(context, listen: false).setToken(token);
+}*/
+Future<void> onLoginSuccess(BuildContext context, String token, String username) async {
+  // Save token securely
+  await TokenStorage.saveToken(token);
+
+  // Store username in shared preferences (optional)
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.setString('loggedInUserName', username);
+
+  // Update your authentication provider with the token
   Provider.of<AuthProvider>(context, listen: false).setToken(token);
 }
 

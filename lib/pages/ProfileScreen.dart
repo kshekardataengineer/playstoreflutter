@@ -312,10 +312,12 @@ class Friend {
   }
 }*/
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:typed_data';
 import 'dart:io';
 
@@ -358,15 +360,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
+
+
+  void _showErrorDialog( String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<Friend2> _fetchFriendDetails(String name) async {
+
+
+
+
+    final _secureStorage = const FlutterSecureStorage();
+    // Initialize secure storage and shared preferences
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Check for stored token and username
+
+    String? token = await _secureStorage.read(key: 'jwt_token');
+    if (token == null) {
+      // Handle missing token (e.g., show a dialog or redirect to login)
+      _showErrorDialog( 'Authentication error. Please log in again.');
+      //return;
+    }
+
+
+
     final response = await http.post(
-      Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/searchperson'),
-      headers: <String, String>{
+      // Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/searchperson'),
+      Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/searchpersonprotected'),
+     /* headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
+      },*/
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
       },
       body: jsonEncode(<String, String>{'name': name}),
     );
-
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       if (data.isNotEmpty) {
@@ -374,9 +418,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         // Fetch profile picture
         final profilePicResponse = await http.post(
-          Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/get_profilepic'),
-          headers: <String, String>{
+          //Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/get_profilepic'),
+          Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/get_profilepicprotected'),
+          /*headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
+          },*/
+
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
           },
           body: jsonEncode(<String, String>{'name': name}),
         );
@@ -435,11 +485,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<http.StreamedResponse> _uploadProfilePicture(File file, String name) async {
+    final _secureStorage = const FlutterSecureStorage();
+    // Initialize secure storage and shared preferences
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Check for stored token and username
+
+    String? token = await _secureStorage.read(key: 'jwt_token');
+
+
+
+
+
+
+
+
+    if (token == null) {
+      // Handle missing token (e.g., show a dialog or redirect to login)
+      _showErrorDialog( 'Authentication error. Please log in again.');
+     // return;
+    }
     final request = http.MultipartRequest(
       'POST',
-      Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/uploading'),
+     // Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/uploading'),
+      Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/uploadingprotected'),
     );
-
+    request.headers['Authorization'] = 'Bearer $token';
     request.fields['name'] = name;
     request.files.add(await http.MultipartFile.fromPath('file', file.path));
 
@@ -447,14 +519,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _saveChanges() async {
+    final _secureStorage = const FlutterSecureStorage();
+    // Initialize secure storage and shared preferences
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Check for stored token and username
+
+    String? token = await _secureStorage.read(key: 'jwt_token');
+
+    if (token == null) {
+      // Handle missing token (e.g., show a dialog or redirect to login)
+      _showErrorDialog( 'Authentication error. Please log in again.');
+      // return;
+    }
     if (_formKey.currentState?.validate() ?? false) {
       _formKey.currentState?.save();
 
       // Send the updated friend data to your API
       final response = await http.post(
-        Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/updateperson'),
-        headers: <String, String>{
+        //Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/updateperson'),
+        Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/updatepersonprotected'),
+       /* headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
+        },*/
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
         },
         body: jsonEncode(<String, dynamic>{
           'name': _friend.name,

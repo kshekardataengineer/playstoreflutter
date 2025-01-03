@@ -592,11 +592,14 @@ class Technician {
 */
 
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
 import 'dart:io';
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ViewTechnicianProfile extends StatefulWidget {
   final String technicianName;
@@ -628,11 +631,45 @@ class _ViewTechnicianProfileState extends State<ViewTechnicianProfile> {
     });
   }
 
+  void _showErrorDialog( String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
   Future<Technician> _fetchTechnicianDetails(String name) async {
+    final _secureStorage = const FlutterSecureStorage();
+    // Initialize secure storage and shared preferences
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Check for stored token and username
+
+    String? token = await _secureStorage.read(key: 'jwt_token');
+    if (token == null) {
+      // Handle missing token (e.g., show a dialog or redirect to login)
+      _showErrorDialog( 'Authentication error. Please log in again.');
+     // return;
+    }
+
     final response = await http.post(
-      Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/searchTechnician'),
-      headers: <String, String>{
+      //Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/searchTechnician'),
+      Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/searchTechnicianprotected'),
+     /* headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
+      },*/
+      headers: <String, String>{
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
       },
       body: jsonEncode(<String, String>{'name': name}),
     );

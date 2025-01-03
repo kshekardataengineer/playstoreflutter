@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:konktapp/pages/techniciandetailsscreen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:typed_data';
 import 'dart:io';
 
@@ -37,12 +39,47 @@ class _ViewProfileState extends State<ViewProfile> {
       _friendFuture = _fetchFriendDetails(widget.friendName);
     });
   }
-
+  void _showErrorDialog( String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
   Future<Friend3> _fetchFriendDetails(String name) async {
+    final _secureStorage = const FlutterSecureStorage();
+    // Initialize secure storage and shared preferences
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Check for stored token and username
+
+    String? token = await _secureStorage.read(key: 'jwt_token');
+
+    if (token == null) {
+      // Handle missing token (e.g., show a dialog or redirect to login)
+      _showErrorDialog( 'Authentication error. Please log in again.');
+      //return;
+    }
     final response = await http.post(
-      Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/searchperson'),
-      headers: <String, String>{
+      //Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/searchperson'),
+
+
+      Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/searchpersonprotected'),
+      /*headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
+      },*/
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
       },
       body: jsonEncode(<String, String>{'name': name}),
     );
@@ -54,9 +91,14 @@ class _ViewProfileState extends State<ViewProfile> {
 
         // Fetch profile picture
         final profilePicResponse = await http.post(
-          Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/get_profilepic'),
-          headers: <String, String>{
-            'Content-Type': 'application/json; charset=UTF-8',
+          //Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/get_profilepic'),
+          Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/get_profilepicprotected'),
+          /*headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },*/
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
           },
           body: jsonEncode(<String, String>{'name': name}),
         );
@@ -115,11 +157,27 @@ class _ViewProfileState extends State<ViewProfile> {
   }
 
   Future<http.StreamedResponse> _uploadProfilePicture(File file, String name) async {
+
+    final _secureStorage = const FlutterSecureStorage();
+    // Initialize secure storage and shared preferences
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Check for stored token and username
+
+    String? token = await _secureStorage.read(key: 'jwt_token');
+
+    if (token == null) {
+      // Handle missing token (e.g., show a dialog or redirect to login)
+      _showErrorDialog( 'Authentication error. Please log in again.');
+      //return;
+    }
     final request = http.MultipartRequest(
       'POST',
-      Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/uploading'),
+      //Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/uploading'),
+      Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/uploadingprotected'),
     );
-
+    request.headers['Authorization'] = 'Bearer $token';
     request.fields['name'] = name;
     request.files.add(await http.MultipartFile.fromPath('file', file.path));
 
@@ -127,14 +185,34 @@ class _ViewProfileState extends State<ViewProfile> {
   }
 
   Future<void> _saveChanges() async {
+
+    final _secureStorage = const FlutterSecureStorage();
+    // Initialize secure storage and shared preferences
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Check for stored token and username
+
+    String? token = await _secureStorage.read(key: 'jwt_token');
+
+    if (token == null) {
+      // Handle missing token (e.g., show a dialog or redirect to login)
+      _showErrorDialog( 'Authentication error. Please log in again.');
+      return;
+    }
     if (_formKey.currentState?.validate() ?? false) {
       _formKey.currentState?.save();
 
       // Send the updated friend data to your API
       final response = await http.post(
-        Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/updateperson'),
-        headers: <String, String>{
+       // Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/updateperson'),
+        Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/updatepersonprotected'),
+        /*headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
+        },*/
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
         },
         body: jsonEncode(<String, dynamic>{
           'name': _friend.name,
@@ -163,31 +241,63 @@ class _ViewProfileState extends State<ViewProfile> {
       }
     }
   }
+
+
 /*adding code*/
   Future<void> findConnection(String person1, String person2) async {
-    final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/findshortesfriendtroute');
-   // final url = Uri.parse('https://testkonkt.azurewebsites.net/findshortesfriendtroute');
+    //final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/findshortesfriendtroute');
+    // final url = Uri.parse('https://testkonkt.azurewebsites.net/findshortesfriendtroute');findshortesfriendtroute_protected
+    final url = Uri.parse(
+        'https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/findshortesfriendtroute_protected');
+    final _secureStorage = const FlutterSecureStorage();
+    // Initialize secure storage and shared preferences
 
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      //body: jsonEncode({'person1': person1, 'person2': person2}),
-      body: jsonEncode({'person1': widget.loggedin, 'person2': person2}),
-    );
+    SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    print('Response status: ${response.statusCode}'); // Debugging: check status code
-    print('Response body: ${response.body}'); // Debugging: check response body
+    // Check for stored token and username
 
-    if (response.statusCode == 200) {
-      final List<dynamic> result = jsonDecode(response.body);
-      if (result.isNotEmpty && result[0]['connections'] != null) {
-        List<String> connections = List<String>.from(result[0]['connections']);
-        _showConnectionDialog(connections);
+    String? token = await _secureStorage.read(key: 'jwt_token');
+
+
+
+    if (token == null) {
+      // Handle missing token (e.g., show a dialog or redirect to login)
+      _showErrorDialog('Authentication error. Please log in again.');
+      return;
+    }
+    try {
+      final response = await http.post(
+        url,
+       // headers: {'Content-Type': 'application/json'},//commented to add token
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        //body: jsonEncode({'person1': person1, 'person2': person2}),
+        body: jsonEncode({'person1': widget.loggedin, 'person2': person2}),
+      );
+
+      print('Response status: ${response
+          .statusCode}'); // Debugging: check status code
+      print(
+          'Response body: ${response.body}'); // Debugging: check response body
+
+      if (response.statusCode == 200) {
+        final List<dynamic> result = jsonDecode(response.body);
+        if (result.isNotEmpty && result[0]['connections'] != null) {
+          List<String> connections = List<String>.from(
+              result[0]['connections']);
+          _showConnectionDialog(connections);
+        } else {
+          _showNoConnectionsDialog();
+        }
       } else {
-        _showNoConnectionsDialog();
+        print('Failed to find connections');
       }
-    } else {
-      print('Failed to find connections');
+    }
+    catch (error) {
+      print('Error finding connections: $error');
+      _showErrorDialog( 'An error occurred. Please try again.');
     }
   }
   void _showNoConnectionsDialog() {
@@ -455,7 +565,7 @@ class _ViewProfileState extends State<ViewProfile> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ChatScreen(sender: _friend.name),
+                          builder: (context) => ChatScreen(sender: _friend.name, loggedinPerson: '', otherPerson:  _friend.name,),
                         ),
                       );
 
@@ -467,11 +577,12 @@ class _ViewProfileState extends State<ViewProfile> {
                   // Find Connection Button
                   ElevatedButton(
                     onPressed: () {
-                      String loggedInUserName = "rajkiran"; // Replace with actual logged-in username
+                     // String loggedInUserName = "rajkiran"; // Replace with actual logged-in username
                       // findConnection(loggedInUserName, widget.technicianName);
                      // findConnection(loggedInUserName, "krishna");//working
-                      findConnection(loggedInUserName,  _friend.name);//testing
+                     // findConnection(loggedInUserName,  _friend.name);//testing
 
+                      findConnection(widget.loggedin,  _friend.name);//testing
 
                       // To test dialog without API, uncomment:
                       // _showConnectionDialog(['Friend A', 'Friend B', 'Friend C']);

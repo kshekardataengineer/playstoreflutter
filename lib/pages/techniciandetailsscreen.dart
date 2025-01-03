@@ -1433,7 +1433,7 @@ class _TechnicianDetailsScreenState extends State<TechnicianDetailsScreen> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => ChatScreen(
-                      sender: widget.technicianName,
+                      sender: widget.technicianName, loggedinPerson: widget.technicianName, otherPerson: '',
                     ),
                   ),
                 );

@@ -331,7 +331,7 @@ class _PostScreenState extends State<PostScreen> {
     FriendsScreen(name: 'rajkian', lat: '17.3730', lng: '78.5476'),
     //reels(),
     //post(),
-    ReadContacts(),
+    ReadContacts(name: 'rajkian'),
     //MapScreen(),
     MapScreen( name:'rajkiran',lat: '17.3730',lng:'78.5476'),
     //ProfileScreen(friendName: 'rajkiran',),

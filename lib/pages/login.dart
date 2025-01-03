@@ -233,7 +233,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../providers/UserProvider.dart';
 import '../testingsession.dart';
-
+/*
 // Login screen with OTP functionality
 class login extends StatefulWidget {
   static const String page_id = "login";
@@ -923,6 +923,277 @@ class _TabsScreenState extends State<TabsScreen> {
       ),
       body: Center(
         child: Text('Home Screen Content'),
+      ),
+    );
+  }
+}
+
+*/
+
+
+
+class login extends StatefulWidget {
+  static const String page_id = "login";
+  @override
+  _LoginState createState() => _LoginState();
+}
+
+class _LoginState extends State<login> {
+  final _formKey = GlobalKey<FormState>();
+  final phoneController = TextEditingController();
+  final _secureStorage = const FlutterSecureStorage();
+
+  Future<void> onLoginSuccess(String token, String username) async {
+    // Store token and username securely
+    await _secureStorage.write(key: 'jwt_token', value: token);
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('loggedInPerson', username);
+
+    // Navigate to HomeScreen
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => HomeScreen(name: username)),
+    );
+  }
+
+  Future<void> requestOtp(String phoneNumber) async {
+    final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/request_otp');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'phone_number': phoneNumber}),
+    );
+
+    if (response.statusCode == 200) {
+      var jsonResponse = json.decode(response.body);
+      if (jsonResponse['message'] == 'OTP sent successfully') {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => VerifyOtpScreen(phoneNumber: phoneNumber),
+          ),
+        );
+      } else {
+        showError('Failed to send OTP');
+      }
+    } else {
+      showError('Failed to send OTP');
+    }
+  }
+
+  void showError(String error) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Error'),
+        content: Text(error),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Login')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextFormField(
+                controller: phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: InputDecoration(labelText: 'Phone Number'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a valid phone number';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    requestOtp(phoneController.text);
+                  }
+                },
+                child: Text('Request OTP'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+
+
+
+
+
+
+class VerifyOtpScreen extends StatefulWidget {
+  final String phoneNumber;
+  VerifyOtpScreen({required this.phoneNumber});
+
+  @override
+  _VerifyOtpScreenState createState() => _VerifyOtpScreenState();
+}
+
+class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
+  final otpController = TextEditingController();
+  final _secureStorage = const FlutterSecureStorage();
+
+
+
+
+
+  Future<void> verifyOtp(String phoneNumber, String otp) async {
+    final verifyUrl = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/verify_otp_protected');
+    final getNameUrl = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/getname');
+
+    try {
+      // Verify OTP
+      final response = await http.post(
+        verifyUrl,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'phone_number': phoneNumber, 'otp': otp}),
+      );
+
+      if (response.statusCode == 200) {
+        var jsonResponse = json.decode(response.body);
+
+        if (jsonResponse['message'] == 'OTP verified successfully') {
+          String token = jsonResponse['token'];
+
+          // Fetch the username
+          final getNameResponse = await http.post(
+            getNameUrl,
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode({'phone_number': phoneNumber}),
+          );
+
+          if (getNameResponse.statusCode == 200) {
+            final getNameData = json.decode(getNameResponse.body);
+
+            if (getNameData is Map<String, dynamic> && getNameData.containsKey('name')) {
+              final String username = getNameData['name'] ?? '';
+
+              // Store the token and username in the session
+              await onLoginSuccess( token, username);
+
+              // Navigate to HomeScreen with the username
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => HomeScreen(name: username)),
+              );
+            } else {
+              showError('Failed to retrieve username.');
+            }
+          } else {
+            showError('Failed to fetch username.');
+          }
+        } else {
+          showError('Invalid OTP.');
+        }
+      } else {
+        showError('Failed to verify OTP.');
+      }
+    } catch (error) {
+      print('Error during OTP verification: $error');
+      showError('An error occurred. Please try again.');
+    }
+  }
+
+  Future<void> onLoginSuccess(String token, String username) async {
+    // Store the token in secure storage
+    await _secureStorage.write(key: 'jwt_token', value: token);
+
+    // Store the username in SharedPreferences
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('loggedInPerson', username);
+
+    // Debug logs to ensure values are stored correctly
+    print('Token stored in secure storage: $token');
+    print('Username stored in shared preferences: $username');
+
+    // Navigate to HomeScreen
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => HomeScreen(name: username)),
+    );
+  }
+
+
+  Future<String?> fetchUserName(String phoneNumber) async {
+    final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/getname');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'phone_number': phoneNumber}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return data['name'];
+    } else {
+      return null;
+    }
+
+
+
+  }
+
+  void showError(String error) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Error'),
+        content: Text(error),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Verify OTP')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Phone Number: ${widget.phoneNumber}'),
+            TextFormField(
+              controller: otpController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(labelText: 'Enter OTP'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                verifyOtp(widget.phoneNumber, otpController.text);
+              },
+              child: Text('Verify OTP'),
+            ),
+          ],
+        ),
       ),
     );
   }

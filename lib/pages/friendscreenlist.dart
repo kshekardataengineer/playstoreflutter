@@ -576,8 +576,10 @@ class _FriendsScreenState extends State<FriendsScreen> {
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../testingsession.dart';
 import 'viewprofile.dart'; // Import the ViewProfile screen
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FriendsScreen extends StatefulWidget {
   final String name;
@@ -619,11 +621,31 @@ class _FriendsScreenState extends State<FriendsScreen> {
 
   // Fetch friends from the API
   Future<void> fetchFriends() async {
-    final url = Uri.parse(
-        'https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/friendsoffriendsradius20levels');
+    final _secureStorage = const FlutterSecureStorage();
+    // Initialize secure storage and shared preferences
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Check for stored token and username
+
+    String? token = await _secureStorage.read(key: 'jwt_token');
+
+    if (token == null) {
+      // Handle missing token (e.g., show a dialog or redirect to login)
+      _showErrorDialog( 'Authentication error. Please log in again.');
+      return;
+    }
+
+
+    //final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/friendsoffriendsradius20levels');
+    final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/friendsoffriendsradius20levelsprotected');
     final response = await http.post(
       url,
-      headers: {'Content-Type': 'application/json'},
+      //headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
       body: jsonEncode({
         'name': widget.name,
         'lat': widget.lat,
@@ -712,16 +734,31 @@ class _FriendsScreenState extends State<FriendsScreen> {
 
 
 /*this should be used only commenting for shravan anna demo*/
-  final _secureStorage = const FlutterSecureStorage();
+
+
 
   // Find the connection between two persons
   Future<void> findConnection( String person1, String person2) async {
     //final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/findshortesfriendtroute');
     final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/findshortesfriendtroute_protected');
     // Retrieve the token from secure storage
+    final _secureStorage = const FlutterSecureStorage();
+    // Initialize secure storage and shared preferences
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Check for stored token and username
+
     String? token = await _secureStorage.read(key: 'jwt_token');
 
-    if (token == null) {
+
+
+
+
+
+
+
+  if (token == null) {
       // Handle missing token (e.g., show a dialog or redirect to login)
       _showErrorDialog( 'Authentication error. Please log in again.');
       return;
@@ -750,7 +787,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
         _showErrorDialog( 'Session expired. Please log in again.');
       } else {
         print('Failed to find connections: ${response.body}');
-        _showErrorDialog( 'Failed to find connections. Please try again.');
+        _showErrorDialog( 'Failed to find connections. Please try again.${response.body}');
       }
     } catch (error) {
       print('Error finding connections: $error');
@@ -853,6 +890,19 @@ class _FriendsScreenState extends State<FriendsScreen> {
           decoration: InputDecoration(hintText: 'Search... name,occupation,location'),
         )
             : Text('Friends List'),
+
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (context) => HomeScreen(name: widget.name),
+              ),
+                  (Route<dynamic> route) => false, // Removes all previous routes
+            );
+          },
+        ),
+
         actions: [
           IconButton(
             icon: Icon(_isSearching ? Icons.close : Icons.search),
@@ -885,8 +935,8 @@ class _FriendsScreenState extends State<FriendsScreen> {
                   //icon: Icon(Icons.network_check, color: Colors.blue),
                   icon:Icon(Icons.group, size: 50, color: Colors.blue),
                   onPressed: () {
-                    //findConnection(widget.name, friend['name']); //commented for demo
-                    findConnection('rajkiran', friend['name']);
+                    findConnection(widget.name, friend['name']); //commented for demo
+                   // findConnection('rajkiran', friend['name']);
                   },
                 ),
               ],
