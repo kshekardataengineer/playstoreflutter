@@ -1183,10 +1183,10 @@ class _KonktServicesScreenState extends State<KonktServicesScreen> {
               },
             ),
           ),
-          SizedBox(height: 20),
+          SizedBox(height: 30),
           // Register Technician button
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          /*Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 30.0),
             child: ElevatedButton(
               onPressed: () {
                 Navigator.push(
@@ -1200,9 +1200,42 @@ class _KonktServicesScreenState extends State<KonktServicesScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(vertical: 15),
-                textStyle: TextStyle(fontSize: 16),
+                textStyle: TextStyle(fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black),
+              ),
+            ), */
+          Padding(padding: const EdgeInsets.symmetric(horizontal: 30.0),
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TechnicianFormScreen(),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20), // Padding inside the button
+                textStyle: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8), // Optional: Adjust button shape
+                ),
+              ),
+              child: const Text(
+                'Register Your Service',
+                style: TextStyle(
+                  color: Colors.black, // Move color definition to the text widget
+                ),
               ),
             ),
+
+
+
           ),
         ],
       ),
