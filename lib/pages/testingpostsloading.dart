@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:typed_data'; // For handling byte data of images
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PostsScreen1 extends StatefulWidget {
   @override
@@ -34,12 +36,31 @@ class _PostsScreenState extends State<PostsScreen1> {
     setState(() {
       isLoading = true; // Set loading state
     });
+    final _secureStorage = const FlutterSecureStorage();
+    // Initialize secure storage and shared preferences
 
-    final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/get_friends_of_friends_posts');
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Check for stored token and username
+
+    String? token = await _secureStorage.read(key: 'jwt_token');
+
+    if (token == null) {
+      // Handle missing token (e.g., show a dialog or redirect to login)
+      _showErrorDialog( 'Authentication error. Please log in again.');
+      return;
+    }
+
+    //final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/get_friends_of_friends_posts');
+    final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/get_friends_of_friends_postsprotected');
     try {
       final response = await http.post(
         url,
-        headers: {"Content-Type": "application/json"},
+       // headers: {"Content-Type": "application/json"},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
         body: jsonEncode({"name": loggedInPerson, "page": currentPage, "size": pageSize}), // Pass pagination params
       );
 
@@ -82,10 +103,30 @@ class _PostsScreenState extends State<PostsScreen1> {
 
   // Method to fetch image data
   Future<Uint8List?> fetchImageData(String filename) async {
-    final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/get_postimage');
+   // final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/get_postimage');
+    final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/get_postimageprotected');
+    final _secureStorage = const FlutterSecureStorage();
+    // Initialize secure storage and shared preferences
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Check for stored token and username
+
+    String? token = await _secureStorage.read(key: 'jwt_token');
+
+    if (token == null) {
+      // Handle missing token (e.g., show a dialog or redirect to login)
+      _showErrorDialog( 'Authentication error. Please log in again.');
+     // return;
+    }
+
     final response = await http.post(
       url,
-      headers: {"Content-Type": "application/json"},
+     // headers: {"Content-Type": "application/json"},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
       body: jsonEncode({"filename": filename}),
     );
 
@@ -98,7 +139,22 @@ class _PostsScreenState extends State<PostsScreen1> {
   }
 
   Future<void> likePost(String filename) async {
-    final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/createlike');
+   // final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/createlike');
+    final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/createlikeprotected');
+    final _secureStorage = const FlutterSecureStorage();
+    // Initialize secure storage and shared preferences
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Check for stored token and username
+
+    String? token = await _secureStorage.read(key: 'jwt_token');
+
+    if (token == null) {
+      // Handle missing token (e.g., show a dialog or redirect to login)
+      _showErrorDialog( 'Authentication error. Please log in again.');
+      return;
+    }
 
     // Optimistically update UI
     setState(() {
@@ -114,7 +170,11 @@ class _PostsScreenState extends State<PostsScreen1> {
 
     final response = await http.post(
       url,
-      headers: {"Content-Type": "application/json"},
+      //headers: {"Content-Type": "application/json"},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
       body: jsonEncode({"filename": filename, "name": loggedInPerson}),
     );
 
@@ -126,7 +186,22 @@ class _PostsScreenState extends State<PostsScreen1> {
   }
 
   Future<void> removeLike(String filename) async {
-    final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/deleteliked');
+    //final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/deleteliked');
+    final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/deletelikedprotected');
+    final _secureStorage = const FlutterSecureStorage();
+    // Initialize secure storage and shared preferences
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Check for stored token and username
+
+    String? token = await _secureStorage.read(key: 'jwt_token');
+
+    if (token == null) {
+      // Handle missing token (e.g., show a dialog or redirect to login)
+      _showErrorDialog( 'Authentication error. Please log in again.');
+      return;
+    }
 
     // Optimistically update UI
     setState(() {
@@ -138,7 +213,11 @@ class _PostsScreenState extends State<PostsScreen1> {
 
     final response = await http.post(
       url,
-      headers: {"Content-Type": "application/json"},
+     // headers: {"Content-Type": "application/json"},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
       body: jsonEncode({"filename": filename, "name": loggedInPerson}),
     );
 
@@ -148,12 +227,46 @@ class _PostsScreenState extends State<PostsScreen1> {
       print('Failed to remove like. Status code: ${response.statusCode}');
     }
   }
+  void _showErrorDialog( String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
 
   Future<void> fetchLikes(String filename) async {
-    final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/getpostlikedby');
+    final _secureStorage = const FlutterSecureStorage();
+    // Initialize secure storage and shared preferences
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Check for stored token and username
+
+    String? token = await _secureStorage.read(key: 'jwt_token');
+
+    if (token == null) {
+      // Handle missing token (e.g., show a dialog or redirect to login)
+      _showErrorDialog( 'Authentication error. Please log in again.');
+      return;
+    }
+    final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/getpostlikedbyprotected');
+    //final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/getpostlikedby');
     final response = await http.post(
       url,
-      headers: {"Content-Type": "application/json"},
+      //headers: {"Content-Type": "application/json"},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
       body: jsonEncode({"filename": filename}),
     );
 
@@ -171,10 +284,29 @@ class _PostsScreenState extends State<PostsScreen1> {
   }
 
   Future<void> commentPost(String filename, String name, String content) async {
-    final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/createcomment');
+    final _secureStorage = const FlutterSecureStorage();
+    // Initialize secure storage and shared preferences
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Check for stored token and username
+
+    String? token = await _secureStorage.read(key: 'jwt_token');
+
+    if (token == null) {
+      // Handle missing token (e.g., show a dialog or redirect to login)
+      _showErrorDialog( 'Authentication error. Please log in again.');
+      return;
+    }
+   // final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/createcomment');
+    final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/createcommentprotected');
     final response = await http.post(
       url,
-      headers: {"Content-Type": "application/json"},
+     // headers: {"Content-Type": "application/json"},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
       body: jsonEncode({"filename": filename, "name": name, "content": content}),
     );
 
@@ -186,10 +318,30 @@ class _PostsScreenState extends State<PostsScreen1> {
   }
 
   Future<void> fetchComments(String filename) async {
-    final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/getpostcommentedby');
+    //final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/getpostcommentedby');
+    final _secureStorage = const FlutterSecureStorage();
+    // Initialize secure storage and shared preferences
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Check for stored token and username
+
+    String? token = await _secureStorage.read(key: 'jwt_token');
+
+    if (token == null) {
+      // Handle missing token (e.g., show a dialog or redirect to login)
+      _showErrorDialog( 'Authentication error. Please log in again.');
+      return;
+    }
+
+    final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/getpostcommentedbyprotected');
     final response = await http.post(
       url,
-      headers: {"Content-Type": "application/json"},
+      //headers: {"Content-Type": "application/json"},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
       body: jsonEncode({"filename": filename}),
     );
 

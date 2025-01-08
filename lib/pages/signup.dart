@@ -28,7 +28,7 @@ class _SignupPageState extends State<SignupPage> {
   TextEditingController mobileController = TextEditingController();
 
   // List of country codes
-  final List<String> countryCodes = ['+44 UK', '+91 India'];
+  final List<String> countryCodes = ['+44', '+91'];
   String countryCode = ''; // Initialize as empty
 
   Position? currentPosition;
@@ -180,10 +180,10 @@ class _SignupPageState extends State<SignupPage> {
           value: value,
           child: Row(
             children: <Widget>[
-              if (value == '+44 UK') ...[
+              if (value == '+44') ...[
                 Image.asset('assets/flags/uk.png', height: 20), // UK flag
                 SizedBox(width: 8),
-              ] else if (value == '+91 India') ...[
+              ] else if (value == '+91') ...[
                 Image.asset('assets/flags/india.png', height: 20), // India flag
                 SizedBox(width: 8),
               ],

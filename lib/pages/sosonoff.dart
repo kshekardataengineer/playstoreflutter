@@ -115,6 +115,7 @@ class _SOSAppState extends State<SOSApp> {
 }
 */
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -127,12 +128,24 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: SOSApp(),
+      home: SOSApp(name:''),
     );
   }
 }
 
 class SOSApp extends StatefulWidget {
+  final String name;
+
+
+
+  static const String page_id = "sos";
+
+
+
+
+
+  // Accept the name as a parameter
+  SOSApp({required this.name});
   @override
   _SOSAppState createState() => _SOSAppState();
 }
@@ -159,23 +172,58 @@ class _SOSAppState extends State<SOSApp> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isSosActive', value);
   }
-
+  void _showErrorDialog( String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
   // Function to switch on the SOS
   Future<void> switchOnSos() async {
-    const url = 'https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/createsosnotification';
-    const url1 = 'https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/sospersonupdate';
 
+    final _secureStorage = const FlutterSecureStorage();
+    // Initialize secure storage and shared preferences
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Check for stored token and username
+
+    String? token = await _secureStorage.read(key: 'jwt_token');
+
+    if (token == null) {
+      // Handle missing token (e.g., show a dialog or redirect to login)
+      _showErrorDialog( 'Authentication error. Please log in again.');
+      return;
+    }
+    //const url = 'https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/createsosnotification';
+    //const url1 = 'https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/sospersonupdate';
+    const url = 'https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/createsosnotificationprotected';
+    const url1 = 'https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/sospersonupdateprotected';
     var body = jsonEncode({
-      "person": "nandu",
+      "person": widget.name,
       "message": "SOS Alert! Please help me"
     });
 
-    var body1 = jsonEncode({"person": "nandu"});
+    var body1 = jsonEncode({"person": widget.name});
 
     try {
       // First API call
       final response1 = await http.post(Uri.parse(url1),
-          headers: {'Content-Type': 'application/json'}, body: body1);
+          //headers: {'Content-Type': 'application/json'},
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: body1);
 
       if (response1.statusCode == 200) {
         setState(() {
@@ -186,7 +234,12 @@ class _SOSAppState extends State<SOSApp> {
 
       // Second API call
       final response = await http.post(Uri.parse(url),
-          headers: {'Content-Type': 'application/json'}, body: body);
+          //headers: {'Content-Type': 'application/json'},
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: body);
 
       if (response.statusCode == 200) {
         setState(() {
@@ -201,12 +254,33 @@ class _SOSAppState extends State<SOSApp> {
 
   // Function to switch off the SOS
   Future<void> switchOffSos() async {
+
+    final _secureStorage = const FlutterSecureStorage();
+    // Initialize secure storage and shared preferences
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Check for stored token and username
+
+    String? token = await _secureStorage.read(key: 'jwt_token');
+
+    if (token == null) {
+      // Handle missing token (e.g., show a dialog or redirect to login)
+      _showErrorDialog( 'Authentication error. Please log in again.');
+      return;
+    }
     const url = 'https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/offsosnotification';
     var body = jsonEncode({"person": "nandu"});
 //updated
     try {
       final response = await http.post(Uri.parse(url),
-          headers: {'Content-Type': 'application/json'}, body: body);
+          //headers: {'Content-Type': 'application/json'},
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+
+          body: body);
 
       if (response.statusCode == 200) {
         setState(() {

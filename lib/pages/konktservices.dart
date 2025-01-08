@@ -977,6 +977,7 @@ class _KonktServicesScreenState extends State<KonktServicesScreen> {
 import 'dart:convert';
 import 'dart:async'; // For Timer
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:konktapp/pages/technicianregisterform.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -998,13 +999,41 @@ class _KonktServicesScreenState extends State<KonktServicesScreen> {
     _clearCacheAndFetchServices(); // Fetch data on startup
     _startAutoRefresh(); // Start the background refresh every minute
   }
+  void _showErrorDialog( String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
 
   /// Clear cached services and fetch the latest services
   Future<void> _clearCacheAndFetchServices() async {
     setState(() {
       _isLoading = true; // Show loading indicator while fetching
     });
+    final _secureStorage = const FlutterSecureStorage();
+    // Initialize secure storage and shared preferences
 
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Check for stored token and username
+
+    String? token = await _secureStorage.read(key: 'jwt_token');
+
+    if (token == null) {
+      // Handle missing token (e.g., show a dialog or redirect to login)
+      _showErrorDialog( 'Authentication error. Please log in again.');
+      return;
+    }
     try {
       final prefs = await SharedPreferences.getInstance();
 
@@ -1013,7 +1042,12 @@ class _KonktServicesScreenState extends State<KonktServicesScreen> {
 
       // Fetch latest data
       final response = await http.get(
-        Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/listkonktserviceswithdetails'),
+       // Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/listkonktserviceswithdetails'),
+        Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/listkonktserviceswithdetailsprotected'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
       );
 
       if (response.statusCode == 200) {
@@ -1071,7 +1105,7 @@ class _KonktServicesScreenState extends State<KonktServicesScreen> {
         children: [
           // Grid view of categories
           Container(
-            height: 300,
+            height: 600,
             color: Colors.white,
             padding: EdgeInsets.all(10),
             child: GridView.builder(
@@ -1084,6 +1118,8 @@ class _KonktServicesScreenState extends State<KonktServicesScreen> {
               itemCount: categories.length,
               itemBuilder: (context, index) {
                 final category = categories[index];
+                // Construct the image path dynamically based on the category name
+                String imagePath = 'assets/images/$category.png';
                 return GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -1093,8 +1129,8 @@ class _KonktServicesScreenState extends State<KonktServicesScreen> {
                             CategoryScreen(category: category, services: _konktServices),
                       ),
                     );
-                  },
-                  child: Container(
+                  }, //commenting for image
+                  /*child: Container(
                     color: Colors.white,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -1105,6 +1141,29 @@ class _KonktServicesScreenState extends State<KonktServicesScreen> {
                           child: Text(
                             category[0].toUpperCase(),
                             style: TextStyle(color: Colors.white, fontSize: 20),
+                          ),
+                        ),*/
+                  child: Container(
+                    color: Colors.white,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Use the Image.asset to load the category image or fallback image
+                        ClipOval(
+                          child: Image.asset(
+                            imagePath,
+                            width: 60, // Set width of the image
+                            height: 60, // Set height of the image
+                            fit: BoxFit.cover, // To ensure the image covers the entire circle
+                            errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
+                              // If image not found, fallback to default image
+                              return Image.asset(
+                                'assets/images/default.png', // Default image asset
+                                width: 60,
+                                height: 60,
+                                fit: BoxFit.cover,
+                              );
+                            },
                           ),
                         ),
                         SizedBox(height: 8),
@@ -1137,9 +1196,9 @@ class _KonktServicesScreenState extends State<KonktServicesScreen> {
                   ),
                 );
               },
-              child: Text('Register as Technician'),
+              child: Text('Register Your Service'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
+                backgroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(vertical: 15),
                 textStyle: TextStyle(fontSize: 16),
               ),

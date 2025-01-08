@@ -483,10 +483,6 @@ class _PostScreenState extends State<PostScreen> {
   Future<List<Post>> fetchPosts(int page, int limit) async {
     try {
 
-
-
-
-
       // Make the API call
       final response = await http.post(
         Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/get_friends__posts_L1'),
@@ -808,7 +804,7 @@ class _PostScreenState extends State<PostScreen> {
                 onPressed: () {
                   Navigator.push(context,
                       //MaterialPageRoute(builder: (context) => messageScreen()));
-                      MaterialPageRoute(builder: (context) => SOSApp()));
+                      MaterialPageRoute(builder: (context) => SOSApp(name:widget.loggedInPerson)));
                 },
                 icon: Icon(Icons.sos_rounded),
               ),

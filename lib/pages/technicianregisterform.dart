@@ -773,8 +773,10 @@ class _TechnicianFormScreenState extends State<TechnicianFormScreen> {
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TechnicianFormScreen extends StatefulWidget {
   @override
@@ -808,9 +810,31 @@ class _TechnicianFormScreenState extends State<TechnicianFormScreen> {
   }
 
   Future<void> _fetchCategories() async {
-    const String apiUrl = 'https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/categories'; // Your API endpoint
+    //const String apiUrl = 'https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/categories';
+    final _secureStorage = const FlutterSecureStorage();
+    // Initialize secure storage and shared preferences
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Check for stored token and username
+
+    String? token = await _secureStorage.read(key: 'jwt_token');
+
+    if (token == null) {
+      // Handle missing token (e.g., show a dialog or redirect to login)
+      _showErrorDialog( 'Authentication error. Please log in again.');
+      return;
+    }
+
+    const String apiUrl = 'https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/categoriesprotected';// Your API endpoint
     try {
-      final response = await http.get(Uri.parse(apiUrl));
+      //final response = await http.get(Uri.parse(apiUrl));
+      final response = await http.get(Uri.parse(apiUrl)  ,   headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+      },);
+
+
 
       if (response.statusCode == 200) {
         // Decode the response body
@@ -854,12 +878,33 @@ class _TechnicianFormScreenState extends State<TechnicianFormScreen> {
 
       print('Payload being sent: ${jsonEncode(technicianData)}');
 
-      const String apiUrl = 'https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/registerTechnician';
+      //const String apiUrl = 'https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/registerTechnician';
+      const String apiUrl = 'https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/registerTechnicianprotected';
+
+
+      final _secureStorage = const FlutterSecureStorage();
+      // Initialize secure storage and shared preferences
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+
+      // Check for stored token and username
+
+      String? token = await _secureStorage.read(key: 'jwt_token');
+
+      if (token == null) {
+        // Handle missing token (e.g., show a dialog or redirect to login)
+        _showErrorDialog( 'Authentication error. Please log in again.');
+        return;
+      }
 
       try {
         final response = await http.post(
           Uri.parse(apiUrl),
-          headers: {'Content-Type': 'application/json'},
+          //headers: {'Content-Type': 'application/json'},
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
           body: jsonEncode(technicianData),
         );
 

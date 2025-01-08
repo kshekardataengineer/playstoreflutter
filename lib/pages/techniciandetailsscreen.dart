@@ -1191,8 +1191,10 @@ working code but website description availability was not loading*/
 
 /*gettechnicianpersondetails need update tis to get latet parameters in technician screen */
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:typed_data';
 
 import 'chat_screen.dart';
@@ -1218,15 +1220,48 @@ class _TechnicianDetailsScreenState extends State<TechnicianDetailsScreen> {
     fetchTechnicianDetails();
     fetchProfileImage();
   }
-
+  void _showErrorDialog( String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
   // Fetch technician details
   Future<void> fetchTechnicianDetails() async {
-    final url = Uri.parse(
-        'https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/gettechnicianpersondetails');
+   // final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/gettechnicianpersondetails');
+    final _secureStorage = const FlutterSecureStorage();
+    // Initialize secure storage and shared preferences
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Check for stored token and username
+
+    String? token = await _secureStorage.read(key: 'jwt_token');
+
+    if (token == null) {
+      // Handle missing token (e.g., show a dialog or redirect to login)
+      _showErrorDialog( 'Authentication error. Please log in again.');
+      return;
+    }
+
+    final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/gettechnicianpersondetailsprotected');
     try {
       final response = await http.post(
         url,
-        headers: {'Content-Type': 'application/json'},
+       // headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
         body: jsonEncode({'technicianname': widget.technicianName}),
       );
 
@@ -1255,11 +1290,31 @@ class _TechnicianDetailsScreenState extends State<TechnicianDetailsScreen> {
 
   // Fetch the profile image
   Future<void> fetchProfileImage() async {
-    const String url = "https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/get_logopic";
+   // const String url = "https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/get_logopic";
+    const String url = "https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/get_logopicprotected";
+    final _secureStorage = const FlutterSecureStorage();
+    // Initialize secure storage and shared preferences
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Check for stored token and username
+
+    String? token = await _secureStorage.read(key: 'jwt_token');
+
+    if (token == null) {
+      // Handle missing token (e.g., show a dialog or redirect to login)
+      _showErrorDialog( 'Authentication error. Please log in again.');
+      return;
+    }
     try {
       final response = await http.post(
         Uri.parse(url),
-        headers: {"Content-Type": "application/json"},
+        //headers: {"Content-Type": "application/json"},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+
         body: json.encode({"name": widget.technicianName}),
       );
 
@@ -1277,12 +1332,30 @@ class _TechnicianDetailsScreenState extends State<TechnicianDetailsScreen> {
 
   // Display connection dialog
   Future<void> findConnection(String person1, String person2) async {
-    final url = Uri.parse(
-        'https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/findshortesfriendtroute');
+    //final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/findshortesfriendtroute');
+    final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/findshortesfriendtrouteprotected');
+    final _secureStorage = const FlutterSecureStorage();
+    // Initialize secure storage and shared preferences
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Check for stored token and username
+
+    String? token = await _secureStorage.read(key: 'jwt_token');
+
+    if (token == null) {
+      // Handle missing token (e.g., show a dialog or redirect to login)
+      _showErrorDialog( 'Authentication error. Please log in again.');
+      return;
+    }
     try {
       final response = await http.post(
         url,
-        headers: {'Content-Type': 'application/json'},
+        //headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
         body: jsonEncode({'person1': person1, 'person2': person2}),
       );
 

@@ -1176,7 +1176,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 onPressed: () {
                   Navigator.push(context,
                       //MaterialPageRoute(builder: (context) => messageScreen()));
-                      MaterialPageRoute(builder: (context) => SOSApp()));
+                      MaterialPageRoute(builder: (context) => SOSApp(name:widget.name)));
                 },
                 icon: Icon(Icons.sos_rounded),
               ),

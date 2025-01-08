@@ -231,6 +231,7 @@ import 'package:konktapp/helper/style.dart';
 import 'package:konktapp/pages/tabs.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import '../newproject.dart';
 import '../providers/UserProvider.dart';
 import '../testingsession.dart';
 /*
@@ -930,7 +931,7 @@ class _TabsScreenState extends State<TabsScreen> {
 
 */
 
-
+import 'package:konktapp/pages/signup.dart';
 
 class login extends StatefulWidget {
   static const String page_id = "login";
@@ -955,6 +956,10 @@ class _LoginState extends State<login> {
       MaterialPageRoute(builder: (context) => HomeScreen(name: username)),
     );
   }
+
+
+
+
 
   Future<void> requestOtp(String phoneNumber) async {
     final url = Uri.parse('https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/request_otp');
@@ -1008,6 +1013,17 @@ class _LoginState extends State<login> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Image.asset(
+                'assets/images/konkt_jpeg_logo.jpeg', // Path to your logo image
+                width: 150, // Set the width you want
+                height: 150, // Set the height you want
+              ),
+              SizedBox(height: 20), // Add some space below the logo
+              Text(
+                'Welcome to Konkt',
+                style: TextStyle(fontFamily: 'bold', fontSize: 24),
+              ),
+              SizedBox(height: 20),
               TextFormField(
                 controller: phoneController,
                 keyboardType: TextInputType.phone,
@@ -1032,9 +1048,47 @@ class _LoginState extends State<login> {
           ),
         ),
       ),
+      bottomNavigationBar: Padding(
+        padding: EdgeInsets.all(10),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RichText(
+              text: TextSpan(
+                text: 'Don\'t have an account? ',
+                style: TextStyle(
+                    color: Colors.black, fontSize: 14, fontFamily: 'regular'),
+                children: <TextSpan>[
+                  TextSpan(
+                    text: ' Sign up.',
+                    style: TextStyle(
+                        color: Colors.blue,
+                        fontSize: 16,
+                        fontFamily: 'regular'),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        Navigator.push(context,
+                            MaterialPageRoute(builder: (context) => SignupPage()));
+                      },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
+
+
+
+
+
+
+
+
+
 
 
 
