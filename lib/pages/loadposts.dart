@@ -10,8 +10,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:konktapp/pages/readcontacts.dart';
 
 import 'package:intl/intl.dart';
+import 'package:konktapp/pages/login.dart';
 import 'package:konktapp/pages/sosonoff.dart';
 import 'package:konktapp/pages/userlistscreenmessages.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'package:provider/provider.dart';
 
@@ -25,6 +27,12 @@ import 'friendsonmap.dart';
 
 import 'login.dart';
 import 'microservices.dart';
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
+
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -115,6 +123,113 @@ class _PostsScreenState extends State<PostsScreen> {
       ),
     );
   }
+  void _showErrorDialogLogin(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);  // Close the dialog
+              login();  // Call the login function
+            },
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+  /*void login() {
+    // Perform any login-related logic here (e.g., authentication)
+
+    // After that, navigate to the login screen
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => login()), // Use `login` widget here
+    );
+
+  }*/
+/* need to test this code for local image loading
+
+  Future<File?> fetchAndSaveImage(String filename) async {
+    try {
+      // Step 1: Get the local directory
+      Directory appDir = await getApplicationDocumentsDirectory(); // Use getExternalStorageDirectory for public storage
+      String konktDirPath = '${appDir.path}/Konkt';
+      Directory konktDir = Directory(konktDirPath);
+
+      // Step 2: Create the directory if it doesn't exist
+      if (!konktDir.existsSync()) {
+        await konktDir.create(recursive: true);
+      }
+
+      // Step 3: Check if the file already exists
+      String filePath = '$konktDirPath/$filename';
+      File localFile = File(filePath);
+
+      if (localFile.existsSync()) {
+        print("Image already exists locally: $filePath");
+        return localFile;
+      }
+
+      // Step 4: Download the image from the server
+      final _secureStorage = const FlutterSecureStorage();
+      String? token = await _secureStorage.read(key: 'jwt_token');
+      if (token == null) {
+        print("No token found. Cannot fetch image.");
+        return null;
+      }
+
+      final url = Uri.parse(
+          'https://nodejskonktapi-eybsepe4aeh9hzcy.eastus-01.azurewebsites.net/get_postimageprotected');
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({"filename": filename}),
+      );
+
+      if (response.statusCode == 200) {
+        // Step 5: Save the image locally
+        await localFile.writeAsBytes(response.bodyBytes);
+        print("Image saved locally: $filePath");
+        return localFile;
+      } else {
+        print("Failed to fetch image. Status Code: ${response.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      print("Error fetching or saving image: $e");
+      return null;
+    }
+  }
+
+  Widget loadImageFromLocal(String filename) {
+    return FutureBuilder<File?>(
+      future: fetchAndSaveImage(filename),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return CircularProgressIndicator(); // Show loading spinner
+        }
+
+        if (snapshot.hasError || snapshot.data == null) {
+          return Icon(Icons.error); // Show error icon if image couldn't be fetched
+        }
+
+        // Display the image from local storage
+        return Image.file(snapshot.data!);
+      },
+    );
+  }
+
+
+
+*/
+
   Future<void> fetchPosts(String name) async {
 
     final _secureStorage = const FlutterSecureStorage();
@@ -181,6 +296,11 @@ class _PostsScreenState extends State<PostsScreen> {
       else if(response.statusCode == 404){
 
         errorMessage = 'No posts to load';
+      }
+      else if(response.statusCode == 403){
+
+        errorMessage = 'token expired';
+        _showErrorDialogLogin( 'logged out . Please log in again.');
       }
 
       else {
@@ -451,6 +571,7 @@ class _PostsScreenState extends State<PostsScreen> {
       });
     } else {
       print('Failed to fetch comments');
+
     }
   }
 
